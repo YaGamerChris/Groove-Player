@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>🎵 Reproductor de Música</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8" />
+  <title>🎵 Reproductor de Música - Versión 1.1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
   <style>
     :root {
@@ -14,18 +14,15 @@
       --bg-secondary: #222;
       --song-bg: none;
     }
-
     body.light {
       --bg-color: #f0f0f0;
       --text-color: #000;
       --accent-color: #007aff;
       --bg-secondary: #e0e0e0;
     }
-
     * {
       box-sizing: border-box;
     }
-
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -37,7 +34,6 @@
       transition: background 0.5s, color 0.5s;
       position: relative;
     }
-
     body::before {
       content: "";
       position: fixed;
@@ -50,11 +46,9 @@
       pointer-events: none;
       transition: background-image 0.5s ease-in-out;
     }
-
     body.has-cover::before {
       background-image: var(--song-bg);
     }
-
     .sidebar {
       width: 250px;
       background: var(--bg-secondary);
@@ -62,34 +56,28 @@
       overflow-y: auto;
       display: none;
     }
-
     .sidebar.active {
       display: block;
     }
-
     .sidebar h2 {
       font-size: 18px;
       margin-top: 0;
     }
-
     .sidebar ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
-
     .sidebar li {
       padding: 8px;
       border-radius: 5px;
       cursor: pointer;
     }
-
     .sidebar li:hover,
     .sidebar li.playing {
       background: var(--accent-color);
       color: var(--bg-color);
     }
-
     .main {
       flex: 1;
       display: flex;
@@ -99,7 +87,6 @@
       position: relative;
       padding: 20px;
     }
-
     .top-bar {
       position: absolute;
       top: 10px;
@@ -109,7 +96,6 @@
       justify-content: space-between;
       gap: 10px;
     }
-
     .top-bar button {
       background: var(--bg-secondary);
       color: var(--text-color);
@@ -118,21 +104,17 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     .top-bar input {
       color: var(--text-color);
     }
-
     .now-playing {
       display: none;
       flex-direction: column;
       align-items: center;
     }
-
     .now-playing.active {
       display: flex;
     }
-
     .cover {
       width: 280px;
       height: 280px;
@@ -142,27 +124,23 @@
       background-position: center;
       margin-bottom: 20px;
     }
-
     .track-title {
       font-size: 22px;
       font-weight: bold;
       margin-bottom: 5px;
       text-align: center;
     }
-
     .track-artist {
       font-size: 14px;
       color: gray;
       margin-bottom: 15px;
       text-align: center;
     }
-
     .controls {
       display: flex;
       gap: 30px;
       margin-bottom: 20px;
     }
-
     .controls button {
       font-size: 26px;
       background: none;
@@ -170,7 +148,6 @@
       color: var(--text-color);
       cursor: pointer;
     }
-
     .progress {
       display: flex;
       align-items: center;
@@ -178,7 +155,6 @@
       width: 100%;
       max-width: 400px;
     }
-
     .progress-bar {
       flex: 1;
       height: 4px;
@@ -187,16 +163,29 @@
       cursor: pointer;
       border-radius: 2px;
     }
-
     .progress-fill {
       height: 100%;
       background: var(--accent-color);
       width: 0%;
       border-radius: 2px;
     }
-
     .hidden {
       display: none !important;
+    }
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 20px;
+      font-size: 14px;
+      background: transparent;
+      color: var(--text-color);
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 9999;
     }
   </style>
 </head>
@@ -215,7 +204,7 @@
         <button id="btnNowPlaying">🎧 Escuchando Ahora</button>
       </div>
       <div>
-        <input type="file" id="folderInput" webkitdirectory multiple>
+        <input type="file" id="folderInput" webkitdirectory multiple />
         <button id="themeToggle">🌓 Tema</button>
       </div>
     </div>
@@ -244,21 +233,9 @@
   </div>
 
   <!-- Footer fijo -->
-  <footer style="
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 14px;
-    background: transparent;
-    color: var(--text-color);
-    opacity: 0.5;
-    padding: 8px 0;
-    pointer-events: none;
-    z-index: 9999;
-  ">
-    © Esta página está protegida por derechos de autor.
+  <footer>
+    <div>Versión 1.1 Beta</div>
+    <div>© Esta página está protegida por derechos de autor.</div>
   </footer>
 
   <script>
@@ -285,12 +262,22 @@
     let currentIndex = 0;
     let isPlaying = false;
 
+    // Para controlar cuándo poner anuncio
+    let songsPlayedCount = 0;
+    let isAdPlaying = false;
+
+    // Datos del anuncio
+    const adAudioName = "Adbeta.mp3";
+    const adImageName = "Adbeta.JPG";
+
+    // Función para formatear tiempo
     function formatTime(time) {
       const min = Math.floor(time / 60);
       const sec = Math.floor(time % 60);
       return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
+    // Cargar pista normal
     function loadTrack(index) {
       const file = playlist[index];
       const url = URL.createObjectURL(file);
@@ -324,29 +311,45 @@
       highlightTrack();
     }
 
+    // Cargar anuncio
+    function loadAd() {
+      player.src = adAudioName;
+      title.textContent = "Anuncio";
+      artist.textContent = "Ya! Music Chris";
+      cover.style.backgroundImage = `url(${adImageName})`;
+
+      document.body.classList.add('has-cover');
+      document.body.style.setProperty('--song-bg', `url(${adImageName})`);
+    }
+
+    // Reproducir pista o anuncio
     function playTrack() {
       player.play();
       isPlaying = true;
       playBtn.textContent = '⏸️';
     }
 
+    // Pausar pista o anuncio
     function pauseTrack() {
       player.pause();
       isPlaying = false;
       playBtn.textContent = '▶️';
     }
 
+    // Resaltar canción en playlist
     function highlightTrack() {
       const items = playlistList.querySelectorAll('li');
       items.forEach((li, i) => li.classList.toggle('playing', i === currentIndex));
     }
 
+    // Actualizar UI de playlist
     function updatePlaylistUI() {
       playlistList.innerHTML = '';
       playlist.forEach((file, index) => {
         const li = document.createElement('li');
         li.textContent = file.name;
         li.addEventListener('click', () => {
+          if (isAdPlaying) return; // No cambiar durante anuncio
           currentIndex = index;
           loadTrack(index);
           playTrack();
@@ -355,26 +358,35 @@
       });
     }
 
+    // Evento al cambiar carpeta
     folderInput.addEventListener('change', () => {
       playlist = Array.from(folderInput.files).filter(f => f.type.startsWith('audio/'));
       playlist.sort((a, b) => a.name.localeCompare(b.name));
       updatePlaylistUI();
       if (playlist.length) {
         currentIndex = 0;
+        songsPlayedCount = 0;
+        isAdPlaying = false;
         loadTrack(0);
         playTrack();
       }
     });
 
-    playBtn.addEventListener('click', () => isPlaying ? pauseTrack() : playTrack());
-    nextBtn.addEventListener('click', () => {
-      if (currentIndex + 1 < playlist.length) {
-        currentIndex++;
-        loadTrack(currentIndex);
-        playTrack();
-      }
+    // Botones play/pause
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) pauseTrack();
+      else playTrack();
     });
+
+    // Botón siguiente
+    nextBtn.addEventListener('click', () => {
+      if (isAdPlaying) return; // No cambiar durante anuncio
+      nextSongOrAd();
+    });
+
+    // Botón anterior
     prevBtn.addEventListener('click', () => {
+      if (isAdPlaying) return; // No cambiar durante anuncio
       if (currentIndex > 0) {
         currentIndex--;
         loadTrack(currentIndex);
@@ -382,6 +394,7 @@
       }
     });
 
+    // Actualizar progreso
     player.addEventListener('timeupdate', () => {
       const percent = (player.currentTime / player.duration) * 100;
       progressFill.style.width = percent + '%';
@@ -389,18 +402,40 @@
       durationEl.textContent = isNaN(player.duration) ? '0:00' : formatTime(player.duration);
     });
 
+    // Click en barra de progreso
     progressBar.addEventListener('click', e => {
       const rect = progressBar.getBoundingClientRect();
       const percent = (e.clientX - rect.left) / rect.width;
       player.currentTime = percent * player.duration;
     });
 
+    // Cuando termina la canción o anuncio
     player.addEventListener('ended', () => {
-      if (currentIndex + 1 < playlist.length) {
-        currentIndex++;
-        loadTrack(currentIndex);
-        playTrack();
+      if (isAdPlaying) {
+        // Acabó anuncio, volver a canción siguiente
+        isAdPlaying = false;
+        if (currentIndex + 1 < playlist.length) {
+          currentIndex++;
+          loadTrack(currentIndex);
+          playTrack();
+        }
+      } else {
+        // Canción normal terminó
+        songsPlayedCount++;
+        // Cada 3 canciones, poner anuncio
+        if (songsPlayedCount > 0 && songsPlayedCount % 3 === 0) {
+          isAdPlaying = true;
+          loadAd();
+          playTrack();
+        } else {
+          if (currentIndex + 1 < playlist.length) {
+            currentIndex++;
+            loadTrack(currentIndex);
+            playTrack();
+          }
+        }
       }
+      highlightTrack();
     });
 
     btnPlaylist.addEventListener('click', () => {
@@ -429,6 +464,24 @@
     } else {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setTheme(prefersDark ? 'dark' : 'light');
+    }
+
+    // Función para pasar a la siguiente canción o anuncio
+    function nextSongOrAd() {
+      songsPlayedCount++;
+      // Si el siguiente es anuncio
+      if (songsPlayedCount > 0 && songsPlayedCount % 3 === 0) {
+        isAdPlaying = true;
+        loadAd();
+        playTrack();
+      } else {
+        if (currentIndex + 1 < playlist.length) {
+          currentIndex++;
+          loadTrack(currentIndex);
+          playTrack();
+        }
+      }
+      highlightTrack();
     }
   </script>
 </body>
