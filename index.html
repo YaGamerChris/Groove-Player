@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>🎵 Reproductor de Música - Versión 1.3 Beta</title>
+<title>Estas en la Beta 1.4!</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" href="favicon.ico" type="image/x-icon" />
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
@@ -10,7 +10,7 @@
   :root {
     --bg-color: #111;
     --text-color: #fff;
-    --accent-color: #0f0;
+    --accent-color: #FFFF;
     --bg-secondary: #222;
   }
   body.light {
@@ -169,7 +169,7 @@
   }
   /* Indicador reproducción en 2do plano */
   body.background-playing .now-playing::after {
-    content: "▶️ Reproduciendo en segundo plano";
+    content: "Reproduciendo en segundo plano";
     position: fixed;
     bottom: 50px;
     right: 20px;
@@ -194,12 +194,13 @@
     <div class="now-playing active" id="nowPlaying">
       <div class="cover" id="cover"></div>
       <div class="track-title" id="title">Sin canción</div>
-      <div class="track-artist" id="artist">Artista</div>
+      <div class="track-artist" id="artist">Unknown</div>
 
       <div class="controls">
         <button id="prev" title="Anterior">⏮️</button>
         <button id="play" title="Reproducir/Pausar">▶️</button>
         <button id="next" title="Siguiente">⏭️</button>
+        <button id="repeat" title="Repetir">🔁</button>
       </div>
 
       <div class="progress">
@@ -215,7 +216,7 @@
     <audio id="player"></audio>
   </div>
   <footer>
-    <div>Versión 1.3 Beta</div>
+    <div>Versión 1.4 Beta</div>
     <div>© Esta página está protegida por derechos de autor.</div>
   </footer>
 
@@ -228,6 +229,7 @@
   const playBtn = document.getElementById('play');
   const nextBtn = document.getElementById('next');
   const prevBtn = document.getElementById('prev');
+  const repeatBtn = document.getElementById('repeat');
   const currentTimeEl = document.getElementById('currentTime');
   const durationEl = document.getElementById('duration');
   const progressBar = document.getElementById('progressBar');
@@ -237,6 +239,7 @@
   let playlist = [];
   let currentIndex = 0;
   let isPlaying = false;
+  let repeatMode = 'off'; // 'off', 'all', 'one'
 
   // Para detectar si la pestaña está visible
   let isTabActive = true;
@@ -290,10 +293,8 @@
     img.onload = () => {
       const avg = averageColor(img);
       const c1 = rgbToCss(avg);
-      // degradado simple: de color promedio a oscuro
       const c2 = `rgba(0,0,0,0.85)`;
       document.body.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
-      // También ponemos el blur en ::before
       document.body.classList.add('has-cover');
       document.body.style.setProperty('--song-bg', `url(${imageSrc})`);
     };
@@ -355,7 +356,7 @@
   }
 
   function highlightTrack() {
-    // Por ahora no hay playlist visual, pero si la quieres después la agregamos
+    // Aquí podrías destacar la canción actual en una lista visual, si tienes
   }
 
   function updateMediaSessionMetadata() {
@@ -409,6 +410,49 @@
     }
   });
 
+  // Repetición con iconos y tooltip
+  repeatBtn.addEventListener('click', () => {
+    if (repeatMode === 'off') {
+      repeatMode = 'all';
+      repeatBtn.textContent = '🔁';
+      repeatBtn.style.color = 'var(--accent-color)';
+      repeatBtn.title = 'Repetir toda la lista';
+    } else if (repeatMode === 'all') {
+      repeatMode = 'one';
+      repeatBtn.textContent = '🔂';
+      repeatBtn.style.color = 'var(--accent-color)';
+      repeatBtn.title = 'Repetir canción actual';
+    } else {
+      repeatMode = 'off';
+      repeatBtn.textContent = 'OFF';
+      repeatBtn.style.color = 'var(--text-color)';
+      repeatBtn.title = 'Repetir apagado';
+    }
+  });
+
+  player.addEventListener('ended', () => {
+    switch (repeatMode) {
+      case 'one':
+        player.currentTime = 0;
+        playTrack();
+        break;
+      case 'all':
+        currentIndex = (currentIndex + 1) % playlist.length;
+        loadTrack(currentIndex);
+        playTrack();
+        break;
+      case 'off':
+        if (currentIndex + 1 < playlist.length) {
+          currentIndex++;
+          loadTrack(currentIndex);
+          playTrack();
+        } else {
+          pauseTrack();
+        }
+        break;
+    }
+  });
+
   player.addEventListener('timeupdate', () => {
     if (!isNaN(player.duration)) {
       const percent = (player.currentTime / player.duration) * 100;
@@ -433,6 +477,11 @@
       playTrack();
     }
   });
+
+  // Inicializa botón repetición con estado inicial
+  repeatBtn.textContent = 'OFF'
+  repeatBtn.title = 'Repetir apagado';
+  repeatBtn.style.color = 'var(--text-color)';
 </script>
 </body>
 </html>
