@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>Estas en la Beta 1.4!</title>
+<title>Estamos a mitad de camino 1.5 Beta!</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" href="favicon.ico" type="image/x-icon" />
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
@@ -58,6 +58,12 @@
     position: relative;
     padding: 20px;
     user-select: none;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  .main.visible {
+    opacity: 1;
+    animation: fadeIn 1s ease forwards;
   }
   .now-playing {
     display: flex;
@@ -187,9 +193,46 @@
     from {opacity: 0; transform: translateY(20px);}
     to {opacity: 0.8; transform: translateY(0);}
   }
+  /* Pantalla de carga */
+  #loadingScreen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-color);
+    color: var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    z-index: 10000;
+    user-select: none;
+  }
+  /* Spinner */
+  .spinner {
+    border: 5px solid rgba(255, 255, 255, 0.2);
+    border-top: 5px solid var(--accent-color);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    margin-right: 15px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  </style>
+</head>
+<body>
+
 </style>
 </head>
 <body>
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    Almacenando de Bufer...
+  </div>
+      </div>
   <div class="main">
     <div class="now-playing active" id="nowPlaying">
       <div class="cover" id="cover"></div>
@@ -200,7 +243,7 @@
         <button id="prev" title="Anterior">⏮️</button>
         <button id="play" title="Reproducir/Pausar">▶️</button>
         <button id="next" title="Siguiente">⏭️</button>
-        <button id="repeat" title="Repetir">🔁</button>
+        <button id="repeat" title="Repetir">OFF</button>
       </div>
 
       <div class="progress">
@@ -216,7 +259,7 @@
     <audio id="player"></audio>
   </div>
   <footer>
-    <div>Versión 1.4 Beta</div>
+    <div>Versión 1.5</div>
     <div>© Esta página está protegida por derechos de autor.</div>
   </footer>
 
@@ -241,7 +284,7 @@
   let isPlaying = false;
   let repeatMode = 'off'; // 'off', 'all', 'one'
 
-  // Para detectar si la pestaña está visible
+  // Detectar si pestaña está activa
   let isTabActive = true;
   document.addEventListener('visibilitychange', () => {
     isTabActive = !document.hidden;
@@ -271,7 +314,7 @@
     ctx.drawImage(image, 0, 0, width, height);
     const data = ctx.getImageData(0, 0, width, height).data;
     let r=0, g=0, b=0, count=0;
-    for (let i=0; i<data.length; i+=4*10) { // muestreo cada 10 pixeles para no pesar mucho
+    for (let i=0; i<data.length; i+=4*10) {
       r += data[i];
       g += data[i+1];
       b += data[i+2];
@@ -289,7 +332,7 @@
 
   function setDynamicBackground(imageSrc) {
     const img = new Image();
-    img.crossOrigin = "anonymous"; // por si es externo, sino ignora
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       const avg = averageColor(img);
       const c1 = rgbToCss(avg);
@@ -335,6 +378,7 @@
       }
     });
     highlightTrack();
+    fadeNowPlaying();
   }
 
   function playTrack() {
@@ -356,7 +400,7 @@
   }
 
   function highlightTrack() {
-    // Aquí podrías destacar la canción actual en una lista visual, si tienes
+    // Puedes implementar destacar canción si haces lista visual después
   }
 
   function updateMediaSessionMetadata() {
@@ -389,6 +433,13 @@
     }
   }
 
+  function fadeNowPlaying() {
+    const nowPlaying = document.getElementById('nowPlaying');
+    nowPlaying.style.animation = 'none';
+    void nowPlaying.offsetWidth;
+    nowPlaying.style.animation = 'fadeIn 1s ease forwards';
+  }
+
   playBtn.addEventListener('click', () => {
     if (isPlaying) pauseTrack();
     else playTrack();
@@ -410,21 +461,21 @@
     }
   });
 
-  // Repetición con iconos y tooltip
+  // Repetición con iconos dinámicos
   repeatBtn.addEventListener('click', () => {
     if (repeatMode === 'off') {
       repeatMode = 'all';
-      repeatBtn.textContent = '🔁';
+      repeatBtn.textContent = '🔁';       // Repetir toda la lista
       repeatBtn.style.color = 'var(--accent-color)';
       repeatBtn.title = 'Repetir toda la lista';
     } else if (repeatMode === 'all') {
       repeatMode = 'one';
-      repeatBtn.textContent = '🔂';
+      repeatBtn.textContent = '🔂';       // Repetir canción actual
       repeatBtn.style.color = 'var(--accent-color)';
       repeatBtn.title = 'Repetir canción actual';
     } else {
       repeatMode = 'off';
-      repeatBtn.textContent = 'OFF';
+      repeatBtn.textContent = 'OFF';       // Repetir apagado
       repeatBtn.style.color = 'var(--text-color)';
       repeatBtn.title = 'Repetir apagado';
     }
@@ -478,10 +529,29 @@
     }
   });
 
-  // Inicializa botón repetición con estado inicial
-  repeatBtn.textContent = 'OFF'
-  repeatBtn.title = 'Repetir apagado';
-  repeatBtn.style.color = 'var(--text-color)';
+  function hideLoadingScreen() {
+    const loading = document.getElementById('loadingScreen');
+    const main = document.querySelector('.main');
+    if (loading) {
+      loading.style.display = 'none';
+    }
+    if (main) {
+      main.classList.add('visible');
+    }
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(hideLoadingScreen, 5000);
+  });
+
+  // Inicializar botón repetición en OFF al cargar
+  function initRepeatBtn() {
+    repeatBtn.textContent = 'OFF';
+    repeatBtn.style.color = 'var(--text-color)';
+    repeatBtn.title = 'Repetir apagado';
+  }
+  initRepeatBtn();
+
 </script>
 </body>
 </html>
