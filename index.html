@@ -36,14 +36,14 @@ body.has-cover::before{
   pointer-events:none;
   transition:background-image 1.5s ease-in-out;
 }
-.main{
-  flex:1;
-  display:flex;
-  flex-direction:row;
-  justify-content:center; /* reproductor centrado */
-  align-items:flex-start;
-  padding:20px;
-  gap:20px; /* espacio entre reproductor y lista */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;  /* reproductor centrado horizontalmente */
+  align-items: center;      /* <-- centrado verticalmente */
+  padding: 20px;
+  gap: 20px;
 }
 .now-playing{
   display:flex;
