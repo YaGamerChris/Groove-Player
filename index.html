@@ -178,8 +178,7 @@ body.has-cover::before{
     </div>
     <audio id="player"></audio>
   </div>
-
-  <script>
+<script>
 const player=document.getElementById('player');
 const cover=document.getElementById('cover');
 const title=document.getElementById('title');
@@ -197,8 +196,21 @@ let currentIndex=0;
 let isPlaying=false;
 let repeatMode='off';
 
-function playTrack(){ player.play(); isPlaying=true; playBtn.textContent='⏸️'; cover.classList.add('playing'); updatePlaylistUI(); }
-function pauseTrack(){ player.pause(); isPlaying=false; playBtn.textContent='▶️'; cover.classList.remove('playing'); updatePlaylistUI(); }
+function playTrack(){
+  player.play();
+  isPlaying=true;
+  playBtn.textContent='⏸️';
+  cover.classList.add('playing');
+  updatePlaylistUI();
+}
+function pauseTrack(){
+  player.pause();
+  isPlaying=false;
+  playBtn.textContent='▶️';
+  cover.classList.remove('playing');
+  updatePlaylistUI();
+}
+
 function loadTrack(index){
   const file=playlist[index];
   const url=URL.createObjectURL(file.file);
@@ -207,27 +219,65 @@ function loadTrack(index){
   artist.textContent=file.artist;
   cover.style.backgroundImage=file.cover?`url(${file.cover})`:'url("https://via.placeholder.com/280x280?text=Sin+Portada")';
   cover.classList.remove('playing');
+
+  // 🟦 ACTUALIZAR MEDIA SESSION
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: file.title,
+      artist: file.artist,
+      album: "Reproductor MiChris",
+      artwork: [
+        { src: file.cover || "https://via.placeholder.com/512?text=Sin+Portada", sizes: '512x512', type: 'image/jpeg' }
+      ]
+    });
+
+    // Controles del mini reproductor
+    navigator.mediaSession.setActionHandler('play', () => playTrack());
+    navigator.mediaSession.setActionHandler('pause', () => pauseTrack());
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        loadTrack(currentIndex);
+        playTrack();
+      }
+    });
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (currentIndex + 1 < playlist.length) {
+        currentIndex++;
+        loadTrack(currentIndex);
+        playTrack();
+      }
+    });
+  }
 }
+
 playBtn.addEventListener('click',()=>{ isPlaying?pauseTrack():playTrack(); });
 nextBtn.addEventListener('click',()=>{ if(currentIndex+1<playlist.length){ currentIndex++; loadTrack(currentIndex); playTrack(); } });
 prevBtn.addEventListener('click',()=>{ if(currentIndex>0){ currentIndex--; loadTrack(currentIndex); playTrack(); } });
+
 repeatBtn.addEventListener('click',()=>{
   if(repeatMode==='off'){ repeatMode='all'; repeatBtn.textContent='🔁'; repeatBtn.style.color='#00ffff'; }
   else if(repeatMode==='all'){ repeatMode='one'; repeatBtn.textContent='🔂'; repeatBtn.style.color='#00ffff'; }
   else{ repeatMode='off'; repeatBtn.textContent='OFF'; repeatBtn.style.color='#fff'; }
 });
+
 player.addEventListener('ended',()=>{
   switch(repeatMode){
-    case'one':player.currentTime=0;playTrack();break;
-    case'all':currentIndex=(currentIndex+1)%playlist.length;loadTrack(currentIndex);playTrack();break;
-    case'off':if(currentIndex+1<playlist.length){currentIndex++;loadTrack(currentIndex);playTrack();}else pauseTrack();break;
+    case 'one': player.currentTime=0; playTrack(); break;
+    case 'all': currentIndex=(currentIndex+1)%playlist.length; loadTrack(currentIndex); playTrack(); break;
+    case 'off':
+      if(currentIndex+1<playlist.length){ currentIndex++; loadTrack(currentIndex); playTrack(); }
+      else pauseTrack();
+    break;
   }
 });
 
 // Seleccionar carpeta
 selectFolderBtn.addEventListener('click',()=>{ folderInput.click(); });
 folderInput.addEventListener('change',()=>{
-  playlist=Array.from(folderInput.files).filter(f=>f.type.startsWith('audio/')).map(f=>({file:f,title:f.name,artist:"Desconocido",cover:'https://via.placeholder.com/40x40?text=?'}));
+  playlist=Array.from(folderInput.files)
+    .filter(f=>f.type.startsWith('audio/'))
+    .map(f=>({file:f,title:f.name,artist:"Desconocido",cover:'https://via.placeholder.com/40x40?text=?'}));
   playlist.sort((a,b)=>a.title.localeCompare(b.title));
   if(playlist.length){ currentIndex=0; loadTrack(0); playTrack(); }
   updatePlaylistUI();
@@ -262,7 +312,8 @@ folderInput.addEventListener('change',()=>{
         if(tag.tags.title) song.title=tag.tags.title;
         if(tag.tags.artist) song.artist=tag.tags.artist;
         if(tag.tags.picture){
-          let base64=""; for(let i=0;i<tag.tags.picture.data.length;i++) base64+=String.fromCharCode(tag.tags.picture.data[i]);
+          let base64=""; 
+          for(let i=0;i<tag.tags.picture.data.length;i++) base64+=String.fromCharCode(tag.tags.picture.data[i]);
           song.cover=`data:${tag.tags.picture.format};base64,${btoa(base64)}`;
           if(index===currentIndex) cover.style.backgroundImage=`url(${song.cover})`;
         }
@@ -273,44 +324,6 @@ folderInput.addEventListener('change',()=>{
 });
 
 repeatBtn.textContent='OFF'; repeatBtn.style.color='#fff';
-  </script>
-
-  <script>
-    // === Registro del Service Worker ===
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('SW registrado', reg))
-          .catch(err => console.log('SW falló', err));
-      });
-    }
-
-    // === Botón para instalar la PWA ===
-    let deferredPrompt;
-    const installBtn = document.getElementById('installBtn');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'block';
-
-      installBtn.addEventListener('click', () => {
-        installBtn.style.display = 'none';
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(choice => {
-          if (choice.outcome === 'accepted') {
-            console.log('Usuario aceptó la instalación');
-          } else {
-            console.log('Usuario canceló la instalación');
-          }
-          deferredPrompt = null;
-        });
-      });
-    });
-
-    window.addEventListener('appinstalled', () => {
-      console.log('App instalada con éxito');
-    });
-  </script>
+    </script>
 </body>
 </html>
