@@ -1,5 +1,5 @@
 {
-  "name": "Reproductor MiChris",
+  "name": "Groove Player Plus",
   "short_name": "Groove Player+",
   "start_url": "./",
   "display": "standalone",
@@ -19,3 +19,4 @@
     }
   ]
 }
+
