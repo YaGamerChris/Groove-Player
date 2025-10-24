@@ -1,19 +1,19 @@
 {
   "name": "Reproductor MiChris",
-  "short_name": "MiChris",
+  "short_name": "Groove Player+",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#5476fb",
-  "theme_color": "#5476fb",
-  "description": "Reproductor de música local estilo PWA",
+  "background_color": "#020F46",
+  "theme_color": "#031972",
+  "description": "Ahora tu reproductor esta en esta APP, solo recuerda que necesitas internet.",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "favicon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "favicon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
