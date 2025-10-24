@@ -3,8 +3,8 @@
   "short_name": "Groove Player+",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#020F46",
-  "theme_color": "#031972",
+  "background_color": "#FFF",
+  "theme_color": "#F1F1F1",
   "description": "Ahora tu reproductor esta en esta APP, solo recuerda que necesitas internet.",
   "icons": [
     {
